@@ -4,10 +4,13 @@ Copyright © 2024 MOHAMED ABDELAZEM <mabdelazemahmed@gmail.com>
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 )
+
+var interactiveMode bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -20,7 +23,15 @@ a new web service, CLI app, or library, Initiator provides the essential scaffol
 and features to get started quickly.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) {},
+	Run: func(cmd *cobra.Command, args []string) {
+		if interactiveMode {
+			// Run in interactive mode
+			// startInteractiveMode()
+		} else {
+			// Run in non-interactive mode
+			fmt.Println("non-interactive mode is not yet implemented!")
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -36,6 +47,9 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
+	rootCmd.AddCommand(createCommand)
+
+	createCommand.Flags().StringP("path", "p", ".", "Path to create the project in")
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.initiator.yaml)")
 
