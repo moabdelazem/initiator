@@ -170,8 +170,6 @@ clean:
 
 func initGitRepo(absPath string) error {
 	cmd := exec.Command("git", "init")
-	// Change the branch name to master by default
-	cmd.Env = append(os.Environ(), "GIT_INIT_DEFAULT_BRANCH=master")
 	cmd.Dir = absPath
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
