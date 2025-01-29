@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/moabdelazem/initiator/internal/projects"
 	"github.com/moabdelazem/initiator/internal/utils"
 	"github.com/spf13/cobra"
 )
@@ -33,6 +34,18 @@ var createCmd = &cobra.Command{
 
 		// Print Success Message
 		fmt.Printf("Project '%s' created successfully at: %s\n", projectName, path)
+
+		// Get The Project Type From The User
+		projectType := projects.NodeJS // TODO: Add a prompt to ask the user for the project type
+
+		// initialize the project
+		project := projects.NewProject(projectName, path, projectType)
+
+		// Create The Project
+		if err := project.Create(); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			return
+		}
 	},
 }
 
@@ -42,5 +55,5 @@ func init() {
 	// -d flag to specify the parent directory
 	createCmd.Flags().StringVarP(&targetDir, "dir", "d", ".", "parent directory for the project")
 	// -ng flag to disable git init
-	createCmd.Flags().BoolVarP(&initGit, "no-git", "ng", true, "do not initialize a git repository")
+	createCmd.Flags().BoolVarP(&initGit, "no-git", "", true, "do not initialize a git repository")
 }
