@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -13,7 +12,7 @@ var rootCmd = &cobra.Command{
 	Short: "A CLI tool to generate project structure in (Go, Nodejs)",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Do Stuff Here
-		fmt.Println("Hello, init!")
+		cmd.Help()
 	},
 }
 
