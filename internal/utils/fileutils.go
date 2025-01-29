@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -47,10 +48,11 @@ func GetAbsPath(targetDir string, projectName string) (string, error) {
 // Parameters:
 //   - path: The path of the directory to create.
 //   - perm: The permission bits for the directory (e.g., 0755).
+//   - initGit: A boolean flag to indicate whether to initialize a git repository.
 //
 // Returns:
 //   - error: An error if the directory cannot be created or is not writable.
-func CreateProjectDir(path string, perm os.FileMode) error {
+func CreateProjectDir(path string, perm os.FileMode, initGit bool) error {
 	// Validate input
 	if path == "" {
 		return fmt.Errorf("path cannot be empty")
@@ -76,6 +78,15 @@ func CreateProjectDir(path string, perm os.FileMode) error {
 
 	// Log the success
 	log.Printf("Created project directory at %s", path)
+
+	// Initialize git if requested
+	if initGit {
+		if shouldInit := promptUserForGit(); shouldInit {
+			if err := InitGitRepo(path); err != nil {
+				return fmt.Errorf("failed to initialize git repository: %v", err)
+			}
+		}
+	}
 
 	return nil
 }
@@ -140,6 +151,64 @@ func promptUserForOverwrite(path string) bool {
 		case "y", "yes":
 			return true
 		case "", "n", "no":
+			return false
+		default:
+			fmt.Println("Please answer with 'y' or 'n'")
+		}
+	}
+}
+
+// InitGitRepo initializes a new Git repository in the specified directory.
+// It runs the 'git init' command in the given directory path.
+//
+// Parameters:
+//   - dir: The directory path where the Git repository should be initialized
+//
+// Returns:
+//   - error: Returns nil on success, or an error if the git init command fails
+//     with the command output appended to the error message
+func InitGitRepo(dir string) error {
+	cmd := exec.Command("git", "init")
+	cmd.Dir = dir
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git init failed: %v - %s", err, string(output))
+	}
+
+	log.Println("Initialized new git repository")
+	return nil
+}
+
+// promptUserForGit prompts the user to decide whether to initialize a git repository.
+// It reads user input from stdin and expects a yes/no answer.
+// The function keeps prompting until a valid response is received.
+//
+// Valid responses (case-insensitive):
+// - Yes: "y", "yes", or empty (press enter)
+// - No: "n", "no"
+//
+// Returns:
+//   - true if user wants to initialize git repository
+//   - false if user declines or if there's an error reading input
+func promptUserForGit() bool {
+	// Prompt the user for confirmation
+	reader := bufio.NewReader(os.Stdin)
+
+	// Loop until a valid response is received
+	for {
+		fmt.Print("Do you want to initialize a git repository? [Y/n]: ")
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("Error reading input: %v\n", err)
+			return false
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+		switch response {
+		case "", "y", "yes":
+			return true
+		case "n", "no":
 			return false
 		default:
 			fmt.Println("Please answer with 'y' or 'n'")

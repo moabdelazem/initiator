@@ -8,6 +8,7 @@ import (
 )
 
 var targetDir string = "." // if not provided, default to current directory
+var initGit bool = true    // create git repository by default
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
@@ -24,8 +25,8 @@ var createCmd = &cobra.Command{
 			return
 		}
 
-		// Create The Project Directory
-		if err := utils.CreateProjectDir(path, 0755); err != nil {
+		// Create The Project Directory with git init option
+		if err := utils.CreateProjectDir(path, 0755, initGit); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
@@ -38,15 +39,8 @@ var createCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(createCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
-
+	// -d flag to specify the parent directory
 	createCmd.Flags().StringVarP(&targetDir, "dir", "d", ".", "parent directory for the project")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// -ng flag to disable git init
+	createCmd.Flags().BoolVarP(&initGit, "no-git", "ng", true, "do not initialize a git repository")
 }
