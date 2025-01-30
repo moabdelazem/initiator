@@ -36,7 +36,7 @@ var createCmd = &cobra.Command{
 		fmt.Printf("Project '%s' created successfully at: %s\n", projectName, path)
 
 		// Get The Project Type From The User
-		projectType := projects.PromptUserForProjectType() // TODO: Add a prompt to ask the user for the project type
+		projectType := projects.PromptUserForProjectType()
 
 		// initialize the project
 		project := projects.NewProject(projectName, path, projectType)

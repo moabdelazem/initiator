@@ -2,6 +2,7 @@ package projects
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 )
 
@@ -27,5 +28,48 @@ func (p *GoProject) Create() error {
 	}
 
 	fmt.Printf("Go project '%s' created successfully\n", p.Name)
+
+	// initalize the project with a main.go file
+	if err := p.initMainFile(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// initMainFile creates a main.go file in the project directory.
+// It writes a simple Go program to the file.
+// Returns an error if file creation or writing fails.
+func (p *GoProject) initMainFile() error {
+	// Create the cmd directory
+	if err := os.Mkdir("cmd", 0755); err != nil {
+		return fmt.Errorf("failed to create cmd directory: %v", err)
+	}
+
+	// Change to the cmd directory
+	if err := ChangeDirectory("cmd"); err != nil {
+		return err
+	}
+
+	// Create the main.go file
+	file, err := os.Create("main.go")
+	if err != nil {
+		return fmt.Errorf("failed to create main.go file: %v", err)
+	}
+	defer file.Close()
+
+	// Write the Go program to the file
+	_, err = file.WriteString(`package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, Go!")
+}
+`)
+	if err != nil {
+		return fmt.Errorf("failed to write to main.go file: %v", err)
+	}
+
+	fmt.Println("main.go file created successfully")
 	return nil
 }

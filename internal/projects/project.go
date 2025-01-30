@@ -12,6 +12,13 @@ type Project interface {
 	Create() error
 }
 
+// ProjectSteps represents the steps required to create a project.
+type ProjectSteps struct {
+	Name    string
+	Action  func() error
+	Message string
+}
+
 // ProjectType represents the type of project.
 type ProjectType string
 
