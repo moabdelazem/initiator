@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 // getAbsPath returns the absolute path of the given target directory.
@@ -53,41 +55,38 @@ func GetAbsPath(targetDir string, projectName string) (string, error) {
 // Returns:
 //   - error: An error if the directory cannot be created or is not writable.
 func CreateProjectDir(path string, perm os.FileMode, initGit bool) error {
-	// Validate input
+	cyan := color.New(color.FgCyan).SprintFunc()
+	green := color.New(color.FgGreen).SprintFunc()
+	red := color.New(color.FgRed).SprintFunc()
+
+	fmt.Printf("\n🚀 Setting up project in: %s\n\n", cyan(path))
+
 	if path == "" {
-		return fmt.Errorf("path cannot be empty")
+		return fmt.Errorf("%s Path cannot be empty", red("✘"))
 	}
-
-	// Check if the directory already exists
 	if err := CheckIfDirExists(path); err != nil {
-		return err
+		return fmt.Errorf("%s Directory validation failed: %v", red("✘"), err)
 	}
+	fmt.Printf("%s Directory validation complete\n", green("✓"))
 
-	// Create the directory
+	s := CreateSpinner("Creating project directory...")
+	s.Start()
 	if err := os.MkdirAll(path, perm); err != nil {
-		return fmt.Errorf("failed to create directory at %s: %v", path, err)
+		s.Stop()
+		return fmt.Errorf("%s Failed to create directory: %v", red("✘"), err)
 	}
+	s.Stop()
+	fmt.Printf("%s Project directory created\n", green("✓"))
 
-	// Verfiy the directory is writeable
-	testFile := filepath.Join(path, ".test")
-	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
-		return fmt.Errorf("failed to write to directory %s: %v", path, err)
-	}
-	// Remove the test file
-	os.Remove(testFile)
-
-	// Log the success
-	log.Printf("Created project directory at %s", path)
-
-	// Initialize git if requested
 	if initGit {
 		if shouldInit := promptUserForGit(); shouldInit {
-			if err := InitGitRepo(path); err != nil {
-				return fmt.Errorf("failed to initialize git repository: %v", err)
+			if err := initializeGitRepository(path); err != nil {
+				return err
 			}
 		}
 	}
 
+	fmt.Printf("\n%s Project setup completed successfully!\n", green("✨"))
 	return nil
 }
 
@@ -131,29 +130,36 @@ func CheckIfDirExists(path string) error {
 //   - "y" or "yes" (case insensitive) for confirmation
 //   - "n", "no", or empty string (case insensitive) for rejection
 func promptUserForOverwrite(path string) bool {
-	// Prompt the user for confirmation
-	reader := bufio.NewReader(os.Stdin)
+	cyan := color.New(color.FgCyan).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+	white := color.New(color.FgWhite, color.Bold).SprintFunc()
 
-	// Loop until a valid response is received
+	fmt.Printf("\n%s Directory Already Exists\n", yellow("⚠"))
+	fmt.Printf("%s Location: %s\n", white("→"), cyan(path))
+	fmt.Printf("\nOptions:\n")
+	fmt.Printf("  %s Remove existing and create new\n", cyan("y"))
+	fmt.Printf("  %s Cancel operation\n", cyan("n"))
+
+	fmt.Printf("\n%s Your choice [y/N]: ", white("→"))
+
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Printf("Directory '%s' already exists. Do you want to overwrite it? [y/N]: ", path)
-		// Read the user's response
 		response, err := reader.ReadString('\n')
-		// Handle any errors reading the input
 		if err != nil {
-			fmt.Printf("Error reading input: %v\n", err)
+			fmt.Printf("%s Error reading input\n", yellow("!"))
 			return false
 		}
 
-		// Normalize the response and check for valid values
 		response = strings.ToLower(strings.TrimSpace(response))
 		switch response {
 		case "y", "yes":
+			fmt.Printf("%s Proceeding with overwrite\n", white("✓"))
 			return true
 		case "", "n", "no":
+			fmt.Printf("%s Operation cancelled\n", yellow("✗"))
 			return false
 		default:
-			fmt.Println("Please answer with 'y' or 'n'")
+			fmt.Printf("%s Please answer with 'y' or 'n': ", yellow("!"))
 		}
 	}
 }
@@ -192,26 +198,89 @@ func InitGitRepo(dir string) error {
 //   - true if user wants to initialize git repository
 //   - false if user declines or if there's an error reading input
 func promptUserForGit() bool {
-	// Prompt the user for confirmation
-	reader := bufio.NewReader(os.Stdin)
+	cyan := color.New(color.FgCyan).SprintFunc()
+	white := color.New(color.FgWhite, color.Bold).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
 
-	// Loop until a valid response is received
+	fmt.Printf("\n%s Git Repository Setup\n", white("📦"))
+	fmt.Printf("\nWould you like to:\n")
+	fmt.Printf("  %s Initialize a new Git repository\n", cyan("y"))
+	fmt.Printf("  %s Skip Git initialization\n", cyan("n"))
+
+	fmt.Printf("\n%s Your choice [Y/n]: ", white("→"))
+
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Print("Do you want to initialize a git repository? [Y/n]: ")
 		response, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Printf("Error reading input: %v\n", err)
+			fmt.Printf("%s Error reading input\n", yellow("!"))
 			return false
 		}
 
 		response = strings.ToLower(strings.TrimSpace(response))
 		switch response {
 		case "", "y", "yes":
+			fmt.Printf("%s Initializing Git repository\n", white("✓"))
 			return true
 		case "n", "no":
+			fmt.Printf("%s Skipping Git initialization\n", white("→"))
 			return false
 		default:
-			fmt.Println("Please answer with 'y' or 'n'")
+			fmt.Printf("%s Please answer with 'y' or 'n': ", yellow("!"))
 		}
 	}
+}
+
+func initializeGitRepository(path string) error {
+	green := color.New(color.FgGreen).SprintFunc()
+	red := color.New(color.FgRed).SprintFunc()
+
+	// Initialize git repository
+	s := CreateSpinner("Initializing Git repository...")
+	s.Start()
+	cmd := exec.Command("git", "init")
+	cmd.Dir = path
+	if err := cmd.Run(); err != nil {
+		s.Stop()
+		return fmt.Errorf("%s Git initialization failed: %v", red("✘"), err)
+	}
+	s.Stop()
+	fmt.Printf("%s Git repository initialized\n", green("✓"))
+
+	// Create .gitignore file
+	s = CreateSpinner("Creating .gitignore file...")
+	s.Start()
+	gitignore := `# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production build
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE/Editor specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific
+.DS_Store
+Thumbs.db`
+
+	if err := os.WriteFile(filepath.Join(path, ".gitignore"), []byte(gitignore), 0644); err != nil {
+		s.Stop()
+		return fmt.Errorf("%s Failed to create .gitignore: %v", red("✘"), err)
+	}
+	s.Stop()
+	fmt.Printf("%s Created .gitignore file\n", green("✓"))
+
+	return nil
 }
