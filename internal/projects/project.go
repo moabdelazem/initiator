@@ -1,10 +1,10 @@
 package projects
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"strings"
+
+	"github.com/fatih/color"
 )
 
 // Project represents a project.
@@ -58,6 +58,12 @@ func ChangeDirectory(dir string) error {
 	return nil
 }
 
+type projectOption struct {
+	Type        ProjectType
+	Name        string
+	Description string
+}
+
 // PromptUserForProjectType prompts the user to select a project type from predefined options.
 // It continuously asks for input until a valid project type is selected.
 // The function reads user input from standard input and converts it to lowercase for comparison.
@@ -69,24 +75,40 @@ func ChangeDirectory(dir string) error {
 //   - "nodejs" for NodeJS projects
 //   - "golang" for GoLang projects
 func PromptUserForProjectType() ProjectType {
-	reader := bufio.NewReader(os.Stdin)
+	cyan := color.New(color.FgCyan).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+	white := color.New(color.FgWhite, color.Bold).SprintFunc()
 
+	options := []projectOption{
+		{
+			Type:        NodeJS,
+			Name:        "Node.js (TypeScript)",
+			Description: "Create a Node.js project with TypeScript setup",
+		},
+		{
+			Type:        GoLang,
+			Name:        "Go",
+			Description: "Create a Go project with modern project structure",
+		},
+	}
+
+	fmt.Printf("\n%s Select a project type:\n\n", white("📋"))
+
+	// Print options with descriptions
+	for i, opt := range options {
+		fmt.Printf("%s %s\n", cyan(fmt.Sprintf("%d.", i+1)), opt.Name)
+		fmt.Printf("   %s\n", yellow(opt.Description))
+	}
+
+	fmt.Printf("\n%s Enter your choice (1-%d): ", white("→"), len(options))
+
+	var choice int
 	for {
-		fmt.Print("Select Project Type (nodejs/golang): ")
-		response, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Printf("Error reading input: %v\n", err)
-			return ""
+		fmt.Scanln(&choice)
+		if choice >= 1 && choice <= len(options) {
+			fmt.Printf("%s Selected: %s\n\n", white("✓"), cyan(options[choice-1].Name))
+			return options[choice-1].Type
 		}
-
-		response = strings.ToLower(strings.TrimSpace(response))
-		switch response {
-		case "nodejs":
-			return NodeJS
-		case "golang":
-			return GoLang
-		default:
-			fmt.Println("Please select a valid project type (nodejs/golang)")
-		}
+		fmt.Printf("%s Please enter a number between 1 and %d: ", yellow("!"), len(options))
 	}
 }
