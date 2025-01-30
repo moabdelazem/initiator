@@ -70,6 +70,14 @@ func (p *GoProject) Create() error {
 			},
 			Message: "Main package created",
 		},
+		{
+			Name: "Tidy Things Up",
+			Action: func() error {
+				cmd := exec.Command("go", "mod", "tidy")
+				return cmd.Run()
+			},
+			Message: "Go modules tidied",
+		},
 	}
 
 	// Add web-specific steps
