@@ -1,8 +1,10 @@
 package projects
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Project represents a project.
@@ -47,4 +49,37 @@ func ChangeDirectory(dir string) error {
 		return fmt.Errorf("failed to change directory to %s: %v", dir, err)
 	}
 	return nil
+}
+
+// PromptUserForProjectType prompts the user to select a project type from predefined options.
+// It continuously asks for input until a valid project type is selected.
+// The function reads user input from standard input and converts it to lowercase for comparison.
+// Returns:
+//   - ProjectType: The selected project type (either NodeJS or GoLang)
+//   - If an error occurs while reading input, returns an empty ProjectType
+//
+// Valid inputs are:
+//   - "nodejs" for NodeJS projects
+//   - "golang" for GoLang projects
+func PromptUserForProjectType() ProjectType {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("Select Project Type (nodejs/golang): ")
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("Error reading input: %v\n", err)
+			return ""
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+		switch response {
+		case "nodejs":
+			return NodeJS
+		case "golang":
+			return GoLang
+		default:
+			fmt.Println("Please select a valid project type (nodejs/golang)")
+		}
+	}
 }
