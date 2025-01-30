@@ -64,17 +64,12 @@ func CreateProjectDir(path string, perm os.FileMode, initGit bool) error {
 	if path == "" {
 		return fmt.Errorf("%s Path cannot be empty", red("✘"))
 	}
-
-	s := CreateSpinner("Validating project directory...")
-	s.Start()
 	if err := CheckIfDirExists(path); err != nil {
-		s.Stop()
 		return fmt.Errorf("%s Directory validation failed: %v", red("✘"), err)
 	}
-	s.Stop()
 	fmt.Printf("%s Directory validation complete\n", green("✓"))
 
-	s = CreateSpinner("Creating project directory...")
+	s := CreateSpinner("Creating project directory...")
 	s.Start()
 	if err := os.MkdirAll(path, perm); err != nil {
 		s.Stop()
