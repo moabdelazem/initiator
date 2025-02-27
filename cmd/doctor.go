@@ -43,6 +43,9 @@ var doctorCmd = &cobra.Command{
 		// Check Docker Compose
 		checkDependency(table, "Docker Compose", pkg.IsDockerComposeInstalled, pkg.GetDockerComposeVersion, "https://docs.docker.com/compose/install/", successPrefix, errorPrefix)
 
+		// Check kubectl
+		checkDependency(table, "kubectl", pkg.IsKubectlInstalled, pkg.GetKubectlVersion, "https://kubernetes.io/docs/tasks/tools/install-kubectl/", successPrefix, errorPrefix)
+
 		table.Render()
 	},
 }
