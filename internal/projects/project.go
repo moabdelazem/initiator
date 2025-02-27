@@ -35,7 +35,11 @@ const (
 func NewProject(name string, dir string, projectType ProjectType) Project {
 	switch projectType {
 	case NodeJS:
-		return &NodeProject{Name: name, Dir: dir}
+		return &NodeProject{
+			Name:        name,
+			Dir:         dir,
+			ProjectType: "", // Will prompt user during creation
+		}
 	case GoLang:
 		return &GoProject{
 			Name:        name,
