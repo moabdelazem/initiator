@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/moabdelazem/initiator/internal/projects"
 	"github.com/moabdelazem/initiator/internal/utils"
@@ -18,6 +19,12 @@ var createCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := args[0]
+
+		// Validate the project name before proceeding
+		if err := utils.ValidateProjectName(projectName); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
 		// Get The Target Directory And Get The absolute path
 		path, err := utils.GetAbsPath(targetDir, projectName)

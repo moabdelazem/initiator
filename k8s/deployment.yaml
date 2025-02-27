@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finn
+  namespace: default
+  labels:
+    app: finn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finn
+  template:
+    metadata:
+      labels:
+        app: finn
+    spec:
+      containers:
+      - name: moabdelazem/finn:latest
+        image: moabdelazem/finn:latest:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
